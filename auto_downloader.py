@@ -1,15 +1,33 @@
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 import time
 
-driver = webdriver.Chrome()
-driver.get("URL_DA_PAGINA_DO_SEI")  # Substitua pela URL real
+# Configuração automática do ChromeDriver
+service = Service(ChromeDriverManager().install())
 
-# Faça login manualmente (se necessário), depois execute:
-links = driver.find_elements_by_xpath('//a[contains(@href, "action=visualizar")]')
+chrome_options = Options()
+chrome_options.add_argument("--start-maximized")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
 
-for i, link in enumerate(links):
-    link.click()
-    time.sleep(3)  # Aguarda o download
-    print(f"Download {i + 1}/{len(links)} concluído.")
+driver = webdriver.Chrome(service=service, options=chrome_options)
 
-driver.quit()
+try:
+    driver.get("https://sei.cidadania.gov.br/sei/processo_acesso_externo_consulta.php?id_acesso_externo=282888")
+    print("Aguardando login manual (30 segundos)...")
+    time.sleep(30)
+    
+    links = driver.find_elements(By.XPATH, '//a[contains(@href, "action=visualizar")]')
+    print(f"Encontrados {len(links)} documentos.")
+    
+    for i, link in enumerate(links, 1):
+        print(f"Baixando documento {i}/{len(links)}")
+        link.click()
+        time.sleep(5)
+        
+except Exception as e:
+    print(f"ERRO: {str(e)}")
+finally:
+    driver.quit()
